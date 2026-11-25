@@ -29,9 +29,6 @@ src/
 │   ├── customer/    # Cliente
 │   └── delivery/    # Entregador
 ├── services/        # Regras de negócio e acesso ao banco
-│   ├── owner/
-│   ├── customer/
-│   └── delivery/
 ├── routers/         # Definição das rotas
 │   ├── owner/
 │   ├── customer/
