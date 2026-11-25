@@ -83,3 +83,66 @@ export async function list({ restaurantId, filters }) {
     total,
   };
 }
+
+export async function update({ id, restaurantId, data }) {
+  const menuItem = await prisma.menuItem.findFirst({
+    where: { id, restaurantId },
+  });
+
+  if (!menuItem) {
+    const error = new Error("Item não encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (data.category_id !== undefined && data.category_id !== null) {
+    const category = await prisma.category.findUnique({
+      where: { id: data.category_id },
+    });
+
+    if (!category) {
+      const error = new Error("Categoria não encontrada");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  const updated = await prisma.menuItem.update({
+    where: { id },
+    data: {
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.price !== undefined && { price: data.price }),
+      ...(data.available !== undefined && { available: data.available }),
+      ...(data.category_id !== undefined && { categoryId: data.category_id }),
+    },
+  });
+
+  return {
+    id: updated.id,
+    restaurant_id: updated.restaurantId,
+    name: updated.name,
+    description: updated.description,
+    price: Number(updated.price),
+    available: updated.available,
+    category_id: updated.categoryId,
+    created_at: updated.createdAt,
+    updated_at: updated.updatedAt,
+  };
+}
+
+export async function remove({ id, restaurantId }) {
+  const menuItem = await prisma.menuItem.findFirst({
+    where: { id, restaurantId },
+  });
+
+  if (!menuItem) {
+    const error = new Error("Item não encontrado");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.menuItem.delete({
+    where: { id },
+  });
+}

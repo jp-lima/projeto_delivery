@@ -1,5 +1,9 @@
 import * as menuService from "../../services/owner/menu.service.js";
-import { createMenuItemSchema } from "../../validations/menu.schema.js";
+import {
+  idSchema,
+  createMenuItemSchema,
+  updateMenuItemSchema,
+} from "../../validations/menu.schema.js";
 
 export async function create(req, res) {
   try {
@@ -49,18 +53,52 @@ export async function getAll(req, res) {
   }
 }
 
-export async function delete(req, res) {
-  try{
-  console.log("Tedte");
+export async function update(req, res) {
+  try {
+    const { id } = req.params;
+    idSchema.parse(id);
 
-}catch(error){
-  if(error.statusCode){
-    return res.status(error.statusCode).json({error: error.message})
+    const validated = updateMenuItemSchema.parse(req.body);
+
+    const menuItem = await menuService.update({
+      id,
+      restaurantId: req.restaurantId,
+      data: validated,
+    });
+
+    return res.status(200).json(menuItem);
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "ID inválido", details: error.errors });
+    }
+
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
+    console.error(error);
+    return res.status(500).json({ error: "Erro interno no servidor" });
   }
-
-  console.error(error);
-  return res.status(error.statusCode).json({error:"Erro interno no servidor"})
 }
 
-}
+export async function remove(req, res) {
+  try {
+    const { id } = req.params;
+    idSchema.parse(id);
 
+    await menuService.remove({ id, restaurantId: req.restaurantId });
+
+    return res.status(204).send();
+  } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "ID inválido", details: error.errors });
+    }
+
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
+    console.error(error);
+    return res.status(500).json({ error: "Erro interno no servidor" });
+  }
+}
