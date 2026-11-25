@@ -1,0 +1,19 @@
+.env
+node_modules/~
+node_modules/
+
+/src/generated/prisma
+/src/generated/prisma-test
+# SQLite databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+
+# Specific SQLite files
+/dev.db
+/prisma/dev-test.db
+
+/uploads
+/tmp

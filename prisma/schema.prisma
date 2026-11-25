@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  customer
+  driver
+  restaurant_admin
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  credit_card
+  pix
+  cash
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum RestaurantStatus {
+  active
+  inactive
+  closed
+}
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  phone         String
+  passwordHash  String
+  role          Role
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  driver           DeliveryDriver?
+  adminRestaurants Restaurant[]
+  orders           Order[]
+  addresses        Address[]
+  reviews          Review[]
+  refreshTokens    RefreshToken[]
+}
+
+model DeliveryDriver {
+  id            String   @id
+  userId        String   @unique
+  vehicle       String?
+  licensePlate  String?
+  available     Boolean  @default(true)
+  balance       Decimal  @default(0)
+  createdAt     DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+  orders   Order[]
+  reviews  Review[]
+}
+
+model Address {
+  id            String   @id
+  userId        String?
+  street        String
+  number        String
+  neighborhood  String
+  city          String
+  state         String
+  cep           String
+  complement    String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user       User?       @relation(fields: [userId], references: [id])
+  restaurants Restaurant[]
+  orders     Order[]
+
+  @@index([userId])
+}
+
+model Category {
+  id          String   @id
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  restaurants Restaurant[]
+  menuItems   MenuItem[]
+}
+
+model Restaurant {
+  id            String           @id
+  adminId       String
+  name          String
+  cnpj          String           @unique
+  phone         String
+  addressId     String
+  categoryId    String?
+  openingHours  String?
+  deliveryFee   Decimal          @default(0)
+  status        RestaurantStatus @default(active)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  admin      User       @relation(fields: [adminId], references: [id])
+  address    Address    @relation(fields: [addressId], references: [id])
+  category   Category?  @relation(fields: [categoryId], references: [id])
+  menuItems  MenuItem[]
+  orders     Order[]
+  reviews    Review[]
+
+  @@index([adminId])
+  @@index([addressId])
+  @@index([categoryId])
+}
+
+model MenuItem {
+  id           String   @id
+  restaurantId String
+  categoryId   String?
+  name         String
+  description  String?
+  price        Decimal
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  category   Category?  @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+}
+
+model Order {
+  id                  String      @id
+  customerId          String
+  restaurantId        String
+  driverId            String?
+  addressId           String
+  status              OrderStatus
+  total               Decimal
+  deliveryFee         Decimal
+  discount            Decimal     @default(0)
+  notes               String?
+  cancellationReason  String?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  customer   User            @relation(fields: [customerId], references: [id])
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id])
+  driver     DeliveryDriver? @relation(fields: [driverId], references: [id])
+  address    Address         @relation(fields: [addressId], references: [id])
+  items      OrderItem[]
+  payment    Payment?
+  review     Review?
+
+  @@index([customerId])
+  @@index([restaurantId])
+  @@index([driverId])
+  @@index([addressId])
+}
+
+model OrderItem {
+  id          String  @id
+  orderId     String
+  menuItemId  String
+  unitPrice   Decimal
+  quantity    Int
+  subtotal    Decimal
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
+model Payment {
+  id        String        @id
+  orderId   String        @unique
+  method    PaymentMethod
+  amount    Decimal
+  status    PaymentStatus
+  paidAt    DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
+}
+
+model Review {
+  id                String   @id
+  orderId           String   @unique
+  customerId        String
+  restaurantId      String
+  driverId          String?
+  restaurantRating  Int?
+  driverRating      Int?
+  comment           String?
+  createdAt         DateTime @default(now())
+
+  order      Order           @relation(fields: [orderId], references: [id])
+  customer   User            @relation(fields: [customerId], references: [id])
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id])
+  driver     DeliveryDriver? @relation(fields: [driverId], references: [id])
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([restaurantId])
+  @@index([driverId])
+}
+
+model RefreshToken {
+  id        String    @id
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
