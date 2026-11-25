@@ -1,3 +1,6 @@
+import meRouter from "./src/routers/me.router.js";
+import ordersRouter from "./src/routers/customer/orders.router.js";
+import { authOrBypass } from "./src/middlewares/authOrBypass.js";
 import express from "express";
 import authRouter from "./src/routers/auth.router.js";
 import { apiKeyAuth } from "./src/middlewares/apiKeyAuth.js";
@@ -35,6 +38,8 @@ app.use(cookieParser());
 app.use("/uploads", express.static("uploads"));
 
 app.use("/auth", authRouter);
+app.use("/me", apiLimiter, authOrBypass, meRouter);
+app.use("/orders", apiLimiter, authOrBypass, ordersRouter);
 app.use("/api", apiLimiter, apiKeyAuth, publicRouters);
 // TODO: reativar authToken quando o fluxo de autenticação estiver pronto
 // app.use("/api/owner", apiLimiter, authToken, ownerRouters);
