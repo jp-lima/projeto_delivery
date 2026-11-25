@@ -1,6 +1,8 @@
 import { Router } from "express";
+import * as categoriesController from "../controllers/categories.controller.js";
 
 const router = Router();
 
-// TODO: implementar rotas públicas
+router.get("/categories", categoriesController.getAll);
+
 export default router;
