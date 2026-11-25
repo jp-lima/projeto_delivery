@@ -1,5 +1,4 @@
-import rateLimit from "express-rate-limit";
-
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 export const authIpLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -12,7 +11,8 @@ export const authIpLimiter = rateLimit({
 export const authAccountLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
-  keyGenerator: (req) => req.body.email,
+  // Sem body (ex.: /auth/refresh, que só usa cookie) cai para o IP
+  keyGenerator: (req) => req.body?.email ?? ipKeyGenerator(req.ip),
   message: {
     error: "Muitas tentativas para este usuário. Tente novamente mais tarde.",
   },
