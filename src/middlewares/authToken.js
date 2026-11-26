@@ -1,21 +1,23 @@
-import jwt from 'jsonwebtoken'
-import { ACCESS_COOKIE } from '../utils/cookies.js'
+import jwt from "jsonwebtoken";
+import { ACCESS_COOKIE } from "../utils/cookies.js";
 
 export function authToken(req, res, next) {
   const token =
-    req.cookies?.[ACCESS_COOKIE] ??
-    req.headers['authorization']?.split(' ')[1]
+    req.cookies?.[ACCESS_COOKIE] ?? req.headers["authorization"]?.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Token ausente. Envie no header: Authorization: Bearer <token>' })
+    return res
+      .status(401)
+      .json({
+        error: "Token ausente. Envie no header: Authorization: Bearer <token>",
+      });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = decoded 
-    next()
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
   } catch (err) {
-    // 401 para o  front saber que deve tentar o refresh
-    return res.status(401).json({ error: 'Token inválido ou expirado' })
+    return res.status(401).json({ error: "Token inválido ou expirado" });
   }
 }

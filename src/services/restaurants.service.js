@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+import { Prisma } from "../generated/prisma/client.ts";
 import { prisma } from "../lib/prisma.js";
 
 export async function getById(id) {
@@ -85,3 +87,4 @@ export async function list({ name, category_id, status, page, limit }) {
     total,
   };
 }
+
