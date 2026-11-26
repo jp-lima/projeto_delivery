@@ -15,6 +15,7 @@ import helmet from "helmet";
 import cors from "cors";
 import publicRouters from "./src/routers/public.router.js";
 import ownerRouters from "./src/routers/owner/index.js";
+import deliveryRouters from "./src/routers/delivery/index.js";
 
 import cookieParser from "cookie-parser";
 const swaggerFile = JSON.parse(readFileSync("./swagger-output.json", "utf-8"));
@@ -40,6 +41,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/auth", authRouter);
 app.use("/me", apiLimiter, authOrBypass, meRouter);
 app.use("/orders", apiLimiter, authOrBypass, ordersRouter);
+app.use("/drivers", apiLimiter, authToken, deliveryRouters);
 app.use("/api", apiLimiter, apiKeyAuth, publicRouters);
 // TODO: reativar authToken quando o fluxo de autenticação estiver pronto
 // app.use("/api/owner", apiLimiter, authToken, ownerRouters);
